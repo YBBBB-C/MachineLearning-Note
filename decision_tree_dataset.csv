@@ -1,0 +1,16 @@
+Company,Position,Education,Salary > 100k
+Google,Sales Manager,Bachelor,No
+Google,Sales Manager,Master,No
+Google,Business Analyst,Bachelor,Yes
+Google,Business Analyst,Master,Yes
+Google,Software Engineer,Bachelor,No
+Google,Software Engineer,Master,Yes
+ABC Pharm,Sales Manager,Bachelor,No
+ABC Pharm,Software Engineer,Bachelor,No
+ABC Pharm,Business Analyst,Bachelor,Yes
+ABC Pharm,Business Analyst,Master,Yes
+Facebook,Sales Manager,Bachelor,Yes
+Facebook,Business Analyst,Bachelor,Yes
+Facebook,Business Analyst,Master,Yes
+Facebook,Software Engineer,Bachelor,Yes
+Facebook,Software Engineer,Master,Yes
