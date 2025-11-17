@@ -1,0 +1,54 @@
+// 从零实现一个 K-近邻（K-Nearest Neighbors, KNN）分类模型，要求如下：
+
+// 距离度量
+
+// 使用欧氏距离（Euclidean distance，也称 2 范数）作为“接近度”指标。
+// 适用数据
+
+// 函数应能处理任意行列数的数据框（dataframe）。
+// 处理平局情况
+
+// 如果 k 个最近邻的类别出现平局，则重新使用 k-1 个最近邻进行预测，直到打破平局。
+// 工具限制
+
+// 可以使用 pandas 和 NumPy，但不能使用 scikit-learn。该算法不显式地学习模型，而是直接基于已有的数据集进行预测。
+
+import numpy as np
+import pandas as pd
+
+def knn_classify(train_data, train_labels, test_point, k):
+    # Convert inputs to numpy arrays if they aren't already
+    train_data = np.array(train_data)
+    test_point = np.array(test_point)
+    train_labels = np.array(train_labels)
+    
+    # Calculate Euclidean distances between test_point and all training points
+    distances = np.sqrt(np.sum((train_data - test_point)**2, axis=1))
+    
+    while k > 0:
+        # Get indices of k nearest neighbors
+        k_nearest_indices = np.argsort(distances)[:k]
+        
+        # Get their labels
+        k_nearest_labels = train_labels[k_nearest_indices]
+        
+        # Count occurrences of each label
+        unique_labels, counts = np.unique(k_nearest_labels, return_counts=True)
+        
+        # Check for tie
+        if len(counts) == 1 or counts[0] != counts[1]:
+            # No tie, return most common label
+            return unique_labels[np.argmax(counts)]
+        
+        # If there's a tie, reduce k by 1 and try again
+        k -= 1
+    
+    # If we get here (k=0), return the label of the single closest point
+    return train_labels[np.argmin(distances)]
+data_points = [(0,0),(3,4),(4,4),(1,0),(0,1),(4,3)]
+labels = [0,1,1,0,0,1]
+
+test_point = np.array([1.5, 1.5])
+result = knn_classify(data_points, labels, test_point, k=3)
+
+print(f"Test 1 - Point {test_point} classified as: {result}")  # Should be 0
