@@ -1,0 +1,62 @@
+///从零实现 K-means 聚类算法（K-Means Clustering）要求如下：
+
+data_points：一个二维 NumPy 数组，表示所有数据点。
+k：聚类的数量。
+initial_centroids：每个聚类初始质心的值。
+返回一个列表，表示原始数据点 data_points 中每个点所属的聚类编号（整数），保持原始顺序。
+///
+K-means 算法的工作原理如下：
+
+初始化质心
+
+从给定的初始质心（initial centroids）开始。
+分配数据点
+
+将每个数据点分配给距离其最近的质心。
+更新质心
+
+根据每个簇中分配的数据点计算新的质心（取平均值）。
+迭代
+
+import numpy as np
+
+def k_means_clustering(data_points, k, initial_centroids, max_iterations=100):
+    # Convert inputs to numpy arrays for easier computation
+    data_points = np.array(data_points)
+    centroids = np.array(initial_centroids)
+    
+    # Initialize variables
+    n_points = len(data_points)
+    prev_assignments = None
+    
+    for _ in range(max_iterations):
+        # Calculate distances between each point and each centroid
+        distances = np.zeros((n_points, k))
+        for i in range(k):
+            # Euclidean distance calculation
+            distances[:, i] = np.sqrt(np.sum((data_points - centroids[i])**2, axis=1))
+        
+        # Assign each point to nearest centroid
+        assignments = np.argmin(distances, axis=1)
+        
+        # Check for convergence
+        if prev_assignments is not None and np.all(assignments == prev_assignments):
+            break
+            
+        # Update centroids
+        for i in range(k):
+            # Get points assigned to this cluster
+            cluster_points = data_points[assignments == i]
+            if len(cluster_points) > 0:
+                # Calculate new centroid as mean of points
+                centroids[i] = np.mean(cluster_points, axis=0)
+        
+        prev_assignments = assignments
+    
+    return assignments.tolist()
+///测试
+data_points1 = [(0,0), (3,4), (4,4), (1,0), (0,1), (4,3)]
+k1 = 2
+initial_centroids1 = [(1,1), (4,5)]
+result1 = k_means_clustering(data_points1, k1, initial_centroids1)
+print("Test 1:", result1)
