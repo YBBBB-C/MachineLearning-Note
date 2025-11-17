@@ -1,0 +1,121 @@
+# # 从零开始构建一个随机森林模型。该模型应满足以下条件：
+
+# 模型的输入包括一个数据框 df 和一个数组 new_point，其中 new_point 的长度与 df 的字段数量相同。
+# df 和 new_point 的所有取值均为 0 或 1，也就是说，所有字段都是哑变量（dummy variables），并且只有两个分类。
+# 与通常的随机森林不同（通常会随机选择数据的子空间来训练每棵树），这里的森林应由一组决策树组成，这些决策树会遍历数据框中所有列值的排列组合，并根据 new_point 中该列的取值来划分数据。
+# 返回 new_point 所属类别的多数投票结果。
+# 可以使用 pandas 和 NumPy，但不能使用 scikit-learn。
+
+
+# 随机森林模型是由多棵决策树组成的集成模型。
+# 每棵树都是基于数据和特征的随机子集构建的。
+# 最终预测结果是通过所有树的多数投票得出的。
+# 对于决策树，如何使用基尼不纯度计算最佳分割点。
+
+import numpy as np
+from collections import Counter
+
+def calculate_gini(labels):
+    if len(labels) == 0:
+        return 0
+    counts = Counter(labels)
+    proportions = [count/len(labels) for count in counts.values()]
+    return 1 - sum([p*p for p in proportions])
+
+def find_best_split(data, labels, feature_idx):
+    best_gini = float('inf')
+    best_split = None
+    
+    # Sort data by feature value
+    sorted_indices = np.argsort(data[:, feature_idx])
+    sorted_data = data[sorted_indices]
+    sorted_labels = labels[sorted_indices]
+    
+    # Try each possible split point
+    for i in range(1, len(data)):
+        left_labels = sorted_labels[:i]
+        right_labels = sorted_labels[i:]
+        
+        # Calculate weighted Gini impurity
+        gini_left = calculate_gini(left_labels)
+        gini_right = calculate_gini(right_labels)
+        gini = (len(left_labels) * gini_left + len(right_labels) * gini_right) / len(labels)
+        
+        if gini < best_gini:
+            best_gini = gini
+            best_split = sorted_data[i-1, feature_idx]
+    
+    return best_split, best_gini
+
+def decision_tree_predict(data, labels, test_point, feature_subset, min_samples_split=2):
+    current_data = data
+    current_labels = labels
+    
+    for feature_idx in feature_subset:
+        if len(current_labels) < min_samples_split:
+            break
+            
+        # Find best split point using Gini impurity
+        split_value, gini = find_best_split(current_data, current_labels, feature_idx)
+        
+        if split_value is None:
+            continue
+            
+        # Split based on test point's value
+        if test_point[feature_idx] <= split_value:
+            mask = current_data[:, feature_idx] <= split_value
+        else:
+            mask = current_data[:, feature_idx] > split_value
+            
+        current_data = current_data[mask]
+        current_labels = current_labels[mask]
+    
+    # Return most common label in leaf node
+    if len(current_labels) > 0:
+        return Counter(current_labels).most_common(1)[0][0]
+    return None
+
+def random_forest_predict(df, labels, new_point, n_trees=10, min_samples_split=2):
+    # Convert input to numpy arrays
+    data = np.array(df)
+    labels = np.array(labels)
+    new_point = np.array(new_point)
+    
+    n_samples = len(data)
+    n_features = data.shape[1]
+    n_features_subset = max(1, int(np.sqrt(n_features)))
+    
+    predictions = []
+    
+    for _ in range(n_trees):
+        # Bootstrap sampling
+        bootstrap_indices = np.random.choice(n_samples, size=n_samples, replace=True)
+        bootstrap_data = data[bootstrap_indices]
+        bootstrap_labels = labels[bootstrap_indices]
+        
+        # Random feature selection
+        feature_subset = np.random.choice(
+            range(n_features), 
+            size=n_features_subset, 
+            replace=False
+        )
+        
+        # Get prediction from this tree
+        pred = decision_tree_predict(
+            bootstrap_data, 
+            bootstrap_labels, 
+            new_point, 
+            feature_subset,
+            min_samples_split
+        )
+        
+        if pred is not None:
+            predictions.append(pred)
+    
+      if not predictions:
+        return Counter(labels).most_common(1)[0][0]
+
+      return Counter(predictions).most_common(1)[0][0]
+      
+    
+    return Counter(predictions).most_common(1)[0][0]
